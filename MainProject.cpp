@@ -16,7 +16,7 @@ string formatCurrency(double amount) {
 
 
 bool isValidDateTime(const string& datetime) {
-    regex pattern("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}");
+    regex pattern("\\d{4}-\\d{2}-\\d{2}-\\d{2}:\\d{2}");
     return regex_match(datetime, pattern);
 }
 
@@ -90,6 +90,90 @@ public:
         }
     }
 
+    void getExpense(string& name, string& sDate, string& eDate){
+        double expense;
+        int year, Syear, Eyear, month, Smonth, Emonth, day, Sday, Eday, hour, Shour, Ehour, min, Smin, Emin; 
+        int tempi=0, count=0;
+        char tempc;
+
+        // for (int j=0; j<sDate.size(); j++){     //Breaks up purchase date to see if it falls in range
+        //     if (sDate[j]=='-' || sDate[j]==':'){
+        //         switch (count){
+        //             case 0: Syear=static_cast<int>(tempi/10); break;
+        //             case 1: Smonth=static_cast<int>(tempi/10); break;
+        //             case 2: Sday=static_cast<int>(tempi/10); break;
+        //             case 3: Shour=static_cast<int>(tempi/10); break;
+        //             case 4: Smin=static_cast<int>(tempi/10); break;
+        //         }
+        //         count++;
+        //         tempi=0;
+        //     }
+        //     else{
+        //         tempc=sDate[j];
+        //         tempi+=static_cast<int>(tempc-48);
+        //         tempi=10*tempi;
+        //     }
+        // }
+        // tempi=0;
+        // count=0;
+        // for (int j=0; j<eDate.size(); j++){     //Breaks up purchase date to see if it falls in range
+        //     if (eDate[j]=='-' || eDate[j]==':'){
+        //         switch (count){
+        //             case 0: Eyear=static_cast<int>(tempi/10); break;
+        //             case 1: Emonth=static_cast<int>(tempi/10); break;
+        //             case 2: Eday=static_cast<int>(tempi/10); break;
+        //             case 3: Ehour=static_cast<int>(tempi/10); break;
+        //             case 4: Emin=static_cast<int>(tempi/10); break;
+        //         }
+        //         count++;
+        //         tempi=0;
+        //     }
+        //     else{
+        //         tempc=eDate[j];
+        //         tempi+=static_cast<int>(tempc-48);
+        //         tempi=10*tempi;
+        //     }
+        // }
+        // tempi=0;
+        // count=0;
+
+        for (int i=0; i<purchases.size(); i++){
+            if (purchases[i].item==name){
+                if (sDate!="All"){
+                    for (int j=0; j<purchases[i].time.size(); j++){     //Breaks up purchase date to see if it falls in range
+                        if (purchases[i].time[j]=='-' || purchases[i].time[j]==':'){
+                            switch (count){
+                                case 0: year=static_cast<int>(tempi/10); break;
+                                case 1: month=static_cast<int>(tempi/10); break;
+                                case 2: day=static_cast<int>(tempi/10); break;
+                                case 3: hour=static_cast<int>(tempi/10); break;
+                                case 4: min=static_cast<int>(tempi/10); break;
+                            }
+                            count++;
+                            tempi=0;
+                        }
+                        else{
+                            tempc=purchases[i].time[j];
+                            tempi+=static_cast<int>(tempc-48);
+                            tempi=10*tempi;
+                        }
+                    }
+                    if ((year>=Syear && year<=Eyear) && (month>=Smonth && month<=Emonth) && (day>=Sday && day<=Eday) && (hour>=Shour && hour<=Ehour) && (min>=Smin && min<=Emin)){
+                        expense+=static_cast<double>(purchases[i].price);
+                        cout<<"Add "<<purchases[i].price<<endl;
+                    }
+                }
+                
+                else if (sDate=="All"){
+                    expense+=static_cast<double>(purchases[i].price);
+                    cout<<"Add "<<purchases[i].price<<endl;
+                }
+            }
+        }
+        // cout<<"Date: "<<year<<" "<<month<<" "<<day<<" "<<hour<<" "<<min<<endl;
+        cout<<"The expense for "<<name<<" is: "<<expense;
+    }
+
     void display() const {
         cout << "Account: " << name << " (ID: " << accountID << ")\n";
         cout << "Balance: " << formatCurrency(balance) << "\n";
@@ -161,6 +245,38 @@ public:
         return accounts;
     }
 };
+
+
+// long getNow(){
+//     time_t timestamp;
+//     time(&timestamp);
+//     return timestamp;
+// }
+// long setTime(){
+//     struct tm datetime;
+//     time_t timestamp;
+//     int year, month, day, hour, min;
+//     cout<<"Enter Time (YYYY-MM-DD HH:MM): ";
+//     cin>>year;
+//     cin>>month;
+//     cin>>day;
+//     cin>>hour;
+//     cin>>min;
+  
+//     datetime.tm_year = year - 1900; // Number of years since 1900
+//     datetime.tm_mon = month - 1; // Number of months since January
+//     datetime.tm_mday = day;
+//     datetime.tm_hour = hour;
+//     datetime.tm_min = min;
+//     datetime.tm_sec = 0;
+//     // Daylight Savings must be specified
+//     // -1 uses the computer's timezone setting
+//     datetime.tm_isdst = -1;
+//     timestamp = mktime(&datetime);
+  
+//     return timestamp;
+// }
+
 
 int main() {
     string filename = "finance_data.txt";
@@ -242,7 +358,7 @@ int main() {
                 int action;
                 while (true) {
                     system("CLS");
-                    cout << "\n1. View Account\n2. Add Purchase\n3. Delete Purchase\n4. Logout\n";
+                    cout << "\n1. View Account\n2. Add Purchase\n3. Delete Purchase\n4. Get Expense\n5. Logout\n";
                     cout << "Enter choice: ";
                     cin >> action;
                     cin.ignore();
@@ -261,8 +377,14 @@ int main() {
                         cout << "Enter Price: ";
                         cin >> price;
                         cin.ignore();
-                        cout << "Enter Time (YYYY-MM-DD HH:MM): ";
+                        cout << "Enter Time (YYYY-MM-DD-HH:MM): ";
                         getline(cin, time);
+                        // if (time=="Current"){
+                        //     time=getNow();
+                        // }
+                        // else if (time=="Custom"){
+                        //     time=setTime();
+                        // }
 
                         if (!isValidDateTime(time)) {
                             cout << "Invalid date/time format! Use YYYY-MM-DD HH:MM\n";
@@ -286,10 +408,22 @@ int main() {
                         }
                         system("PAUSE");
                     } else if (action == 4) {
+                        system("CLS");
+                        currentAccount.display();
+                        string name, startDate, endDate;
+                        cout << "Enter the name of a purchase: ";
+                        cin >> name;
+                        cout<<" Enter date range of purchase ('All' for no date range): ";
+                        cin>>startDate;
+                        cin>>endDate;
+                        cin.ignore();
+                        currentAccount.getExpense(name, startDate, endDate);
+                        system("PAUSE");
+                    } else if (action == 5) {
                         cout << "Logging out...\n";
                         system("PAUSE");
                         break;
-                    } else {
+                    }  else {
                         cout << "Invalid choice!\n";
                         system("PAUSE");
                     }
